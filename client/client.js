@@ -1,5 +1,21 @@
 import * as alt from "alt-client";
 import * as native from "natives";
+import * as NativeUI from "nativeui/nativeui.js";
+
+//Menu
+const mainMenu = new NativeUI.Menu("Trailer", "Trailer Menu", new NativeUI.Point(50, 50));
+
+mainMenu.ItemSelect.on(item => {
+  	if (item instanceof NativeUI.UIMenuListItem) {
+  		alt.log(item.SelectedItem.DisplayText, item.SelectedItem.Data);
+   	} else if (item instanceof NativeUI.UIMenuSliderItem) {
+   		alt.log(item.Text, item.Index, item.IndexToItem(item.Index));
+   	} else {
+   		alt.log(item.Text);
+   	}
+});
+
+//Script
 
 alt.onServer('ws', (player, trailer, veh, args) => {
     let bone = 18;
@@ -14,6 +30,13 @@ alt.onServer('ss', (player, veh) => {
     native.detachEntity(veh, true, true)
 });
 
+function attach (veh, trailer, bone, attachPos){
+    native.attachEntityToEntity(veh, trailer, bone, attachPos.x, attachPos.y, attachPos.z, 0, 0, 0, false, false, true, false, 20, true);
+}
+
+function detach (veh){
+    native.detachEntity(veh, true, true);    
+}
 /**
  * Get the distance from one vector to another.
  * Does take Z-Axis into consideration.
