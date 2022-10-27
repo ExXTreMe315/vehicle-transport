@@ -55,18 +55,18 @@ mainMenu.ItemSelect.on(item => {
    	}
 });
 
-let uppr = true
 doorsMenu.ItemSelect.on(item => {
     if (item == rampItem) {
-        alt.emitServer('ramp');
+        alt.emitServer('get:trailer');
+        alt.onServer('send:trailer', (closestVehicle) => {
+            alt.emitServer('ramp', closestVehicle);
+        });
    	}
     if (item == upprItem) {
-        alt.emitServer('uppr');
-        if(uppr){
-            uppr = false
-        } else if(!uppr){
-            uppr = true
-        }
+        alt.emitServer('get:trailer2');
+        alt.onServer('send:trailer2', (closestVehicle) => {
+            alt.emitServer('uppr', closestVehicle);
+        });
    	}
 });
 
@@ -82,7 +82,6 @@ attachMenu.ItemSelect.on(item => {
         let veh = alt.Player.local.vehicle;
         alt.emitServer('get:trailer');
         alt.onServer('send:trailer', (closestVehicle) => {
-            alt.log(closestVehicle);
             alt.emitServer('getDoorState', closestVehicle, 0);
             alt.onServer('send:doorstate', (doorState) => {
                 if(doorState == 0){
