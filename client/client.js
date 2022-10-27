@@ -17,9 +17,6 @@ mainMenu.AddItem(attachMenuItem);
 let testItem = (new NativeUI.UIMenuItem("testItem", "execute testItem"));
 mainMenu.AddItem(testItem);
 
-mainMenu.AddSubMenu(doorsMenu, doorsMenuItem);
-mainMenu.AddSubMenu(attachMenu, attachMenuItem);
-
 //RampMenu
 let rampItem = (new NativeUI.UIMenuItem("Ramp", "Lower/Raise Ramp"));
 doorsMenu.AddItem(rampItem);
@@ -41,20 +38,6 @@ let detachItem = (new NativeUI.UIMenuItem("Detach", "Detach Vehicle"));
 attachMenu.AddItem(detachItem);
 
 //ItemClickHandlers
-
-mainMenu.ItemSelect.on(item => {
-    if (item == testItem) {
-        alt.emitServer('get:trailer');
-        alt.onServer('send:trailer', (closestVehicle) => {
-            alt.log(closestVehicle);
-            alt.emitServer('getDoorState', closestVehicle, 0);
-            alt.onServer('send:doorstate', (doorState) => {
-                alt.log(doorState);
-            });
-        });
-   	}
-});
-
 doorsMenu.ItemSelect.on(item => {
     if (item == rampItem) {
         alt.emitServer('get:trailer');
