@@ -14,14 +14,13 @@ mainMenu.AddItem(doorsMenuItem);
 let attachMenuItem = (new NativeUI.UIMenuItem("Attach Menu", "Open Attach Menu"));
 mainMenu.AddItem(attachMenuItem);
 
-let testItem = (new NativeUI.UIMenuItem("testItem", "execute testItem"));
-mainMenu.AddItem(testItem);
-
+mainMenu.AddSubMenu(doorsMenu, doorsMenuItem);
+mainMenu.AddSubMenu(attachMenu, attachMenuItem);
 //RampMenu
 let rampItem = (new NativeUI.UIMenuItem("Ramp", "Lower/Raise Ramp"));
 doorsMenu.AddItem(rampItem);
 
-let upprItem = (new NativeUI.UIMenuItem("Etage", "Lower/Raise Etage"));
+let upprItem = (new NativeUI.UIMenuItem("Floor", "Lower/Raise Floor"));
 doorsMenu.AddItem(upprItem);
 
 //AttachMenu
@@ -56,44 +55,35 @@ doorsMenu.ItemSelect.on(item => {
 attachMenu.ItemSelect.on(item => {
   	if (item == attachItem) {
         let veh = alt.Player.local.vehicle;
-        alt.emitServer('ask:trailer');
-        alt.onServer('send:trailer', (trailer) => {
+        alt.emitServer('get:trailer3');
+        alt.onServer('send:trailer3', (trailer) => {
             attach(veh, trailer);
         });
    	}
     if (item == attachUpprMidItem) {
         let veh = alt.Player.local.vehicle;
-        alt.emitServer('get:trailer');
-        alt.onServer('send:trailer', (closestVehicle) => {
-            alt.emitServer('getDoorState', closestVehicle, 0);
+        alt.emitServer('get:trailer3');
+        alt.onServer('send:trailer3', (trailer) => {
+            alt.emitServer('getDoorState', trailer, 0);
             alt.onServer('send:doorstate', (doorState) => {
                 if(doorState == 0){
-                    alt.onServer('send:trailer', (trailer) => {
-                        attachUpprMidUp(veh, trailer);
-                    });
+                    attachUpprMidUp(veh, trailer);
                 } else if(doorState == 7){
-                    alt.onServer('send:trailer', (trailer) => {
-                        attachUpprMidDown(veh, trailer);
-                    });
+                    attachUpprMidDown(veh, trailer);
                 }
             });
         });
     }
     if (item == attachUpprEndItem) {
         let veh = alt.Player.local.vehicle;
-        alt.emitServer('get:trailer');
-        alt.onServer('send:trailer', (closestVehicle) => {
-            alt.log(closestVehicle);
-            alt.emitServer('getDoorState', closestVehicle, 0);
+        alt.emitServer('get:trailer3');
+        alt.onServer('send:trailer3', (trailer) => {
+            alt.emitServer('getDoorState', trailer, 0);
             alt.onServer('send:doorstate', (doorState) => {
                 if(doorState == 0){
-                    alt.onServer('send:trailer', (trailer) => {
-                        attachUpprEndUp(veh, trailer);
-                    });
+                    attachUpprEndUp(veh, trailer);
                 } else if(doorState == 7){
-                    alt.onServer('send:trailer', (trailer) => {
-                        attachUpprEndDown(veh, trailer);
-                    });
+                    attachUpprEndDown(veh, trailer);
                 }
             });
         });
@@ -107,12 +97,27 @@ attachMenu.ItemSelect.on(item => {
 //Key Handles
 alt.on('keyup', (key) => {
     if(key === 69){
-        let closestVehicle = getClosestVehicle(alt.Player.local);
-        let dist = distance(closestVehicle.pos, alt.Player.local.pos);
-        if(closestVehicle.model == alt.hash('tr2') && dist <= 5){
-            mainMenu.Open();
-            alt.log(closestVehicle)
-            alt.emitServer('send:trailer', closestVehicle);
+        if(mainMenu.Visible || attachMenu.Visible || doorsMenu.Visible){
+            mainMenu.Close();
+            attachMenu.Close();
+            doorsMenu.Close();
+        } else {
+            let closestVehicle = getClosestVehicle(alt.Player.local);
+            let dist = distance(closestVehicle.pos, alt.Player.local.pos);
+            if(closestVehicle.model == alt.hash('tr2') && dist <= 5){
+                mainMenu.Open();
+                alt.emitServer('send:trailer', closestVehicle);
+            }
+        }
+    }
+});
+
+alt.on('keyup', (key) => {
+    if(key === 70 || key === 27){
+        if(mainMenu.Visible || attachMenu.Visible || doorsMenu.Visible){
+            mainMenu.Close();
+            attachMenu.Close();
+            doorsMenu.Close();
         }
     }
 });

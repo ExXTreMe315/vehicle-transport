@@ -1,9 +1,5 @@
 import * as alt from "alt-server";
 
-alt.onClient('ask:trailer', (player) =>{
-    alt.emitClient(player, 'send:trailer', trailer);
-});
-
 alt.onClient('send:trailer', (player, closestVehicle) => {
     alt.onClient('get:trailer', (player) => {
         alt.emitClient(player, 'send:trailer', closestVehicle)
@@ -13,6 +9,12 @@ alt.onClient('send:trailer', (player, closestVehicle) => {
 alt.onClient('send:trailer', (player, closestVehicle) => {
     alt.onClient('get:trailer2', (player) => {
         alt.emitClient(player, 'send:trailer2', closestVehicle)
+    });
+});
+
+alt.onClient('send:trailer', (player, closestVehicle) => {
+    alt.onClient('get:trailer3', (player) => {
+        alt.emitClient(player, 'send:trailer3', closestVehicle)
     });
 });
 
