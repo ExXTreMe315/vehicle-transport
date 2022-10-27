@@ -1,0 +1,55 @@
+
+{
+    "metallic": [
+        {
+            "id": 0,
+            "name": "black"
+        },
+        {
+            "id": 1,
+            "name": "white"
+        },
+        {
+            "id": 2,
+            "name": "white"
+        },
+        {
+            "id": 3,
+            "name": "white"
+        },
+        {
+            "id": 4,
+            "name": "white"
+        },
+        {
+            "id": 5,
+            "name": "white"
+        }
+    ],
+    "matt": [
+        {
+            "id": 0,
+            "name": "black"
+        },
+        {
+            "id": 1,
+            "name": "white"
+        },
+        {
+            "id": 2,
+            "name": "white"
+        },
+        {
+            "id": 3,
+            "name": "white"
+        },
+        {
+            "id": 4,
+            "name": "white"
+        },
+        {
+            "id": 5,
+            "name": "white"
+        }
+    ]
+}
