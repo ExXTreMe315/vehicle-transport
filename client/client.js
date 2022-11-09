@@ -2,10 +2,20 @@ import * as alt from "alt-client";
 import * as native from "natives";
 import * as NativeUI from './includes/NativeUI/NativeUi';
 
+//Save the Current Flatbed and Closest veh
+const currVehs = {};
+
+//Menu Point
+const menuPoint = new NativeUI.Point(50,50);
+
+
 //Menus
-const mainMenu = new NativeUI.Menu("Trailer", "Trailer Menu", new NativeUI.Point(50, 50));
-const doorsMenu = new NativeUI.Menu("Ramps", "Ramps Menu", new NativeUI.Point(50, 50));
-const attachMenu = new NativeUI.Menu("Attach", "Attach Menu", new NativeUI.Point(50, 50));
+const mainMenu = new NativeUI.Menu("Trailer", "Trailer Menu", menuPoint);
+const doorsMenu = new NativeUI.Menu("Ramps", "Ramps Menu", menuPoint);
+const attachMenu = new NativeUI.Menu("Attach", "Attach Menu", menuPoint);
+
+const flatbedMenu = new NativeUI.Menu("Flatbed", "Flatbed Menu", menuPoint);
+const flatbedAttachMenu = new NativeUI.Menu("Flatbed", "Flatbed Menu", menuPoint);
 
 //MainMenu
 let doorsMenuItem = (new NativeUI.UIMenuItem("Ramp/Floor Menu", "Lower/Raise Ramp/Floor"));
@@ -35,6 +45,17 @@ attachMenu.AddItem(attachUpprEndItem);
 
 let detachItem = (new NativeUI.UIMenuItem("Detach", "Detach Vehicle"));
 attachMenu.AddItem(detachItem);
+
+let detachItem2 = (new NativeUI.UIMenuListItem(
+    "Detach",
+    "Detach Vehicle",
+    new NativeUI.ItemsCollection(["Ground", "Truck Bed"])
+));
+
+
+//FlatbedMenu
+let getClosesItem = (new NativeUI.UIMenuItem("Attach", "Attach Vehicle"));
+flatbedMenu.AddItem(getClosesItem);
 
 //ItemClickHandlers
 doorsMenu.ItemSelect.on(item => {
@@ -94,26 +115,60 @@ attachMenu.ItemSelect.on(item => {
    	}
 });
 
+flatbedMenu.ItemSelect.on(item => {
+    if (item == getClosesItem) {
+        let closestVehicle = getClosestVehicle(alt.Player.local);
+        if(closestVehicle.model != alt.Player.local.vehicle){
+            currVehs.tow = closestVehicle;
+            alt.emitServer('getNumberPlateText', closestVehicle);
+        }
+    }
+    if (item instanceof NativeUI.UIMenuListItem) {
+        if(item.SelectedItem.DisplayText == "Ground"){
+            detach2(false);
+            flatbedMenuBuild();
+        } else if(item.SelectedItem.DisplayText == "Truck Bed"){
+            detach2(true);
+            flatbedMenuBuild();
+        }
+    }
+    if (item instanceof NativeUI.UIMenuListItem) {
+        if(item.SelectedItem.DisplayText == "Yes"){
+            flatbedAttachDo();
+        } else if(item.SelectedItem.DisplayText == "No"){
+            flatbedMenuBuild();
+        }
+    }
+});
+
 //Key Handles
 alt.on('keyup', (key) => {
-    if(key === 69){
-        if(mainMenu.Visible || attachMenu.Visible || doorsMenu.Visible){
+    if(key === 71){
+        if(mainMenu.Visible || attachMenu.Visible || doorsMenu.Visible || flatbedMenu.Visible){
             mainMenu.Close();
             attachMenu.Close();
             doorsMenu.Close();
-        } else {
+            flatbedMenu.Close();
+        } else if(!alt.Player.local.vehicle){
             let closestVehicle = getClosestVehicle(alt.Player.local);
             let dist = distance(closestVehicle.pos, alt.Player.local.pos);
             if(closestVehicle.model == alt.hash('tr2') && dist <= 5){
                 mainMenu.Open();
                 alt.emitServer('send:trailer', closestVehicle);
             }
+        } else if(alt.Player.local.vehicle && native.getEntityModel(alt.Player.local.vehicle.scriptID) == native.getHashKey('flatbed')){
+            alt.emitServer('flat:load');
         }
     }
-});
-
-alt.on('keyup', (key) => {
-    if(key === 70 || key === 27){
+    if(key === 27){
+        if(mainMenu.Visible || attachMenu.Visible || doorsMenu.Visible || flatbedMenu.Visible){
+            mainMenu.Close();
+            attachMenu.Close();
+            doorsMenu.Close();
+            flatbedMenu.Close();
+        }
+    }
+    if(key === 70){
         if(mainMenu.Visible || attachMenu.Visible || doorsMenu.Visible){
             mainMenu.Close();
             attachMenu.Close();
@@ -121,6 +176,29 @@ alt.on('keyup', (key) => {
         }
     }
 });
+
+//Server Side Triggers
+alt.onServer('flat:loadet', (serverFlats) => {
+    let vehFound = false;
+    serverFlats.forEach(e => {
+        if(e.savedflat == alt.Player.local.vehicle){            
+            flatbedMenu.Clear();
+            flatbedMenu.AddItem(detachItem2);
+            flatbedMenu.Open();
+            currVehs.tow = e.savedtow;
+            currVehs.flat = e.savedflat;
+            vehFound = true;
+        }
+    });
+    if(!vehFound){
+        console.log("Du bist nicht auf Server gespeivhert");
+        flatbedMenuBuild();
+        currVehs.flat = alt.Player.local.vehicle;
+        flatbedMenu.Open();
+    }    
+});
+
+alt.onServer('sendNumberPlateIndex', (veh, numberPlateText) => FlatbedAttach(veh, numberPlateText));
 
 //Script Functions
 function attach (veh, trailer){
@@ -172,6 +250,51 @@ function detach (veh){
     native.detachEntity(veh, true, true);    
 }
 
+function detach2 (detachType) {
+    if(detachType == false){
+        native.attachEntityToEntity(currVehs.tow, currVehs.flat, 20, -0.5, -13.0, 0.0, 0.0, 0.0, 0.0, false, false, true, false, 20, true);
+        native.detachEntity(currVehs.tow, true, true);
+    } else if(detachType == true){
+        native.detachEntity(currVehs.tow, true, true);
+    }
+    alt.emitServer('flat:del', currVehs.flat)
+    currVehs.tow = undefined;
+}
+
+function FlatbedAttach (veh, numberPlateText){
+    flatbedMenu.Clear();
+
+    let attachVehicleItem = (new NativeUI.UIMenuListItem(
+        `Attach ${numberPlateText}?`,
+        `Attach vehicle with numberplate ${numberPlateText}?`,
+        new NativeUI.ItemsCollection(["No", "Yes"])
+    ));
+    flatbedMenu.AddItem(attachVehicleItem);
+}
+
+function flatbedAttachDo (){
+    native.attachEntityToEntity(currVehs.tow, currVehs.flat, 20, -0.5, -5.5, 1.0, 0.0, 0.0, 0.0, true, false, true, false, 10, true);
+
+    alt.setTimeout(() => {
+        native.detachEntity(currVehs.tow, true, true);
+        alt.setTimeout(() => {
+            let vehPos = native.getOffsetFromEntityGivenWorldCoords(currVehs.flat, currVehs.tow.pos.x, currVehs.tow.pos.y, currVehs.tow.pos.z);
+            let attachPos = {x: vehPos.x, y: vehPos.y, z: vehPos.z}
+
+            native.attachEntityToEntity(currVehs.tow, currVehs.flat, 20, -0.5, -5.5, attachPos.z, 0, 0, 0, false, false, true, false, 20, true);    
+        }, 1000);
+    }, 100);
+
+    flatbedMenuBuild();
+    flatbedMenu.Close();
+    alt.emitServer('flat:save', currVehs.tow, currVehs.flat);
+}
+
+function flatbedMenuBuild (){
+    flatbedMenu.Clear();
+    flatbedMenu.AddItem(getClosesItem);
+}
+
 //Distance Functions
 /**
  * Get all players in a certain range of a position.
@@ -180,7 +303,7 @@ function detach (veh){
  * @param  {} dimension=0
  * @returns {Array<alt.Player>}
  */
- export function getPlayersInRange(pos, range, dimension = 0) {
+export function getPlayersInRange(pos, range, dimension = 0) {
     if (pos === undefined || range === undefined) {
         throw new Error('GetPlayersInRange => pos or range is undefined');
     }

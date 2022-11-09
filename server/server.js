@@ -1,5 +1,7 @@
 import * as alt from "alt-server";
 
+const flatbeds = []
+
 alt.onClient('send:trailer', (player, closestVehicle) => {
     alt.onClient('get:trailer', (player) => {
         alt.emitClient(player, 'send:trailer', closestVehicle)
@@ -42,4 +44,29 @@ alt.onClient('uppr', (player, veh) =>{
             veh.setDoorState(4, 0);
         }, 1000);
     }
+});
+
+alt.onClient('getNumberPlateText', (player, veh) =>{
+    let numberPlateText = veh.numberPlateText
+    alt.emitClient(player, 'sendNumberPlateIndex', veh, numberPlateText);
+});
+
+alt.onClient('flat:save', (player, tow, flat) => {
+    flatbeds.push({savedtow: tow, savedflat: flat});
+    console.log(flatbeds);
+});
+
+
+alt.onClient('flat:load', (player) => {
+    alt.emitClient(player, 'flat:loadet', flatbeds)
+});
+
+alt.onClient('flat:del', (player, flat) => {
+    let i = 0;
+    flatbeds.forEach(e => {
+        if(e['savedflat'] == flat){
+            flatbeds.splice(i, 1);
+            console.log(flatbeds)
+        }
+    });
 });
