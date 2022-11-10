@@ -4,8 +4,6 @@ Script for Transporting Vehicles. For these this script allows you to use a Vehi
 Credits to
 [DurtyFree](https://github.com/DurtyFree/alt-V-NativeUI) and [datWeazel](https://github.com/datWeazel/alt-V-NativeUI).
 
-Die zusammensetzung des Menüs stammt von dem RP Server [Miami-Life](https://www.miami-life.de/) for the NativeUI.
-
 ## Installation:
 ****
 1. Copy the main folder in your Alt:V ressources dirtonary.
